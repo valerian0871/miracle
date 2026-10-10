@@ -40,3 +40,17 @@ export function toImage(image: Maybe<SanityImageData>, fallbackAlt = ''): ImageP
     focal: image.hotspot ? { x: image.hotspot.x, y: image.hotspot.y } : undefined,
   }
 }
+/**
+ * A 1200 by 630 link-preview image. The ad is letterboxed on the site's ink colour
+ * and not cropped, so the copy inside it is never cut off.
+ */
+export function ogImageUrl(image: Maybe<SanityImageData>): string | undefined {
+  if (!image?.asset?._ref) return undefined
+  return urlFor({ asset: image.asset })
+    .width(1200)
+    .height(630)
+    .fit('fill')
+    .bg('0d0e0d')
+    .auto('format')
+    .url()
+}
