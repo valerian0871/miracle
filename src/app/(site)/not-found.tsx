@@ -1,22 +1,20 @@
-import Link from 'next/link'
+import { ButtonLink } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
 
 export default function NotFound() {
   return (
-    <Container className="flex min-h-[70dvh] flex-col items-start justify-center gap-8 py-24">
-      <p className="font-display text-[clamp(6rem,20vw,14rem)] font-semibold uppercase leading-none text-line-strong">
-        404
+    <Container className="flex min-h-dvh flex-col justify-center pb-10 pt-14">
+      <p className="text-caption uppercase tracking-widest text-paper-2">Error 404</p>
+      <h1 className="mt-2 text-h2">That page does not exist</h1>
+      <p className="mt-3 max-w-xl text-lead text-paper-2">
+        The link may be out of date, or the case study may not be published yet.
       </p>
-      <div className="flex flex-col gap-4">
-        <h1 className="text-h3">Page not found</h1>
-        <p className="text-paper-2 max-w-prose">
-          The page you&rsquo;re looking for doesn&rsquo;t exist or may have moved.
-        </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <ButtonLink href="/">Back to the home page</ButtonLink>
+        <ButtonLink href="/contact" variant="secondary">
+          Contact
+        </ButtonLink>
       </div>
-      <Link href="/" className="link-line text-accent font-semibold">
-        Back to home
-      </Link>
     </Container>
   )
 }
-

@@ -1,17 +1,14 @@
 import { ImageResponse } from 'next/og'
-import { sanityFetch } from '@/sanity/lib/fetch'
-import { SETTINGS_QUERY } from '@/sanity/queries'
-import type { SiteSettings } from '@/sanity/types'
+import { getSettings } from '@/sanity/data'
 
-export const runtime = 'edge'
+export const alt = 'Portfolio of a creative strategist and copywriter'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-export default async function OpenGraphImage() {
-  const settings = await sanityFetch<SiteSettings>({ query: SETTINGS_QUERY })
-  const name = settings?.name ?? 'Portfolio'
-  const role = settings?.role ?? ''
+export default async function OpengraphImage() {
+  const settings = await getSettings()
 
+  // Image generation cannot read CSS variables. These hex values mirror the tokens in globals.css.
   return new ImageResponse(
     (
       <div
@@ -20,25 +17,21 @@ export default async function OpenGraphImage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-end',
-          padding: '72px 80px',
-          backgroundColor: '#0d0e0d',
+          justifyContent: 'space-between',
+          background: '#0d0e0d',
           color: '#f1eee6',
-          fontFamily: 'Arial Narrow, Arial, sans-serif',
+          padding: 64,
         }}
       >
-        <div style={{ fontSize: 72, fontWeight: 700, textTransform: 'uppercase', lineHeight: 0.92, color: '#f1eee6' }}>
-          {name}
-        </div>
-        {role ? (
-          <div style={{ fontSize: 28, marginTop: 24, color: '#d4a24a', textTransform: 'uppercase', letterSpacing: 2 }}>
-            {role}
+        <div style={{ display: 'flex', width: 96, height: 8, background: '#d4a24a' }} />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 96, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1 }}>
+            {settings.name}
           </div>
-        ) : null}
+          <div style={{ fontSize: 40, color: '#bab7ad', marginTop: 24 }}>{settings.role}</div>
+        </div>
       </div>
     ),
     { ...size },
   )
 }
-
