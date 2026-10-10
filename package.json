@@ -27,5 +27,8 @@
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "typecheck": "tsc --noEmit",
+  "seed": "node --env-file=.env.local scripts/seed.mjs",
+  "prelaunch": "node --env-file=.env.local scripts/prelaunch-check.mjs"
 }

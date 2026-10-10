@@ -328,6 +328,54 @@
     border-radius: var(--radius-pill);
     animation: spin 700ms linear infinite;
   }
+
+    /* ---------- Buttons: one shape, two variants ---------- */
+  .btn {
+    display: inline-flex;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-inline: 1.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-small);
+    line-height: 1;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      transform var(--duration-base) var(--ease-brand),
+      background-color var(--duration-base) var(--ease-brand),
+      border-color var(--duration-base) var(--ease-brand);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+  }
+
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+  }
+
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-paper);
+  }
+
+  .btn-secondary {
+    border-color: var(--color-line-strong);
+    color: var(--color-paper);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-paper);
+  }
 }
 
 @keyframes rise {
