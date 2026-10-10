@@ -1,0 +1,400 @@
+@import "tailwindcss";
+
+/*
+  Design tokens. "static" makes Tailwind emit every variable, so the plain CSS
+  below can reference them with var(). The "initial" lines remove Tailwind's
+  defaults so only the values defined here exist.
+*/
+@theme static {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --font-*: initial;
+
+  /* Spacing: 1 unit = 8px */
+  --spacing: 0.5rem;
+
+  /* Colour */
+  --color-ink: #0d0e0d;
+  --color-ink-raised: #161816;
+  --color-line: #2a2d2a;
+  --color-line-strong: #454945;
+  --color-paper: #f1eee6;
+  --color-paper-2: #bab7ad;
+  --color-paper-3: #8d8a81;
+  --color-accent: #d4a24a;
+  --color-accent-ink: #15110a;
+  --color-danger: #ee8a7d;
+
+  /* Fonts: the --font-barlow and --font-source variables are set by next/font on <html> */
+  --font-display: var(--font-barlow), "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-source), "Helvetica Neue", Arial, sans-serif;
+
+  /* The two weights used. Restated so the font reset above cannot remove them. */
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Type ramp */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.55;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.65;
+  --text-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-lead--line-height: 1.5;
+  --text-h3: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
+  --text-h3--line-height: 1.05;
+  --text-h2: clamp(2.75rem, 1.6rem + 4.2vw, 5rem);
+  --text-h2--line-height: 0.98;
+  --text-h1: clamp(3.75rem, 1.2rem + 10.5vw, 10rem);
+  --text-h1--line-height: 0.92;
+
+  /* Layout and shape */
+  --container-page: 90rem;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-brand-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 160ms;
+  --duration-base: 320ms;
+  --duration-slow: 700ms;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-ink);
+    color-scheme: dark;
+    scroll-padding-top: 7rem;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  /* Skip link: first focusable element on every page */
+  .skip-link {
+    position: fixed;
+    left: 1.5rem;
+    top: 1rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    font-weight: 600;
+    transform: translateY(-200%);
+    transition: transform var(--duration-fast) var(--ease-brand);
+  }
+
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /* Animated underline for text links */
+  .link-line {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1px;
+    transition: background-size var(--duration-base) var(--ease-brand);
+  }
+
+  .link-line:hover,
+  .link-line:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* The only hover movement allowed: 2px up */
+  @media (hover: hover) {
+    .lift {
+      transition:
+        transform var(--duration-base) var(--ease-brand),
+        border-color var(--duration-base) var(--ease-brand);
+    }
+
+    .lift:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  /* Line mask for reveals. The padding and negative margin keep tone marks
+     above capitals and descenders from being clipped by overflow: hidden. */
+  .mask {
+    display: block;
+    overflow: hidden;
+    padding-block: 0.14em;
+    margin-block: -0.14em;
+  }
+
+  .mask-inner {
+    display: block;
+  }
+
+  /* ---------- Intro screen ---------- */
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    background-color: var(--color-ink);
+    visibility: hidden;
+    transform: translateY(-100%);
+    transition:
+      transform var(--duration-slow) var(--ease-brand-in-out),
+      visibility 0s linear var(--duration-slow);
+  }
+
+  html[data-intro="playing"] .intro {
+    visibility: visible;
+    transform: none;
+    transition: none;
+    /* If JavaScript never finishes the intro, hide it anyway after 6 seconds */
+    animation: intro-failsafe 0s linear 6s forwards;
+  }
+
+  .intro-bar {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    overflow: hidden;
+    background-color: var(--color-line);
+  }
+
+  .intro-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  html[data-intro="playing"] .intro-bar::after {
+    animation: intro-bar 1400ms var(--ease-brand-in-out) forwards;
+  }
+
+  /* ---------- Hero entrance (starts when the intro is done) ---------- */
+  html[data-intro="playing"] .rise {
+    transform: translateY(110%);
+  }
+
+  html[data-intro="done"] .rise {
+    animation: rise var(--duration-slow) var(--ease-brand) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+  }
+
+  html[data-intro="playing"] .fade-up {
+    opacity: 0;
+  }
+
+  html[data-intro="done"] .fade-up {
+    animation: fade-up var(--duration-slow) var(--ease-brand) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+  }
+
+  /* ---------- Scroll reveal (below the fold only) ---------- */
+  [data-reveal] {
+    transition:
+      opacity var(--duration-slow) var(--ease-brand),
+      transform var(--duration-slow) var(--ease-brand);
+    transition-delay: var(--delay, 0ms);
+  }
+
+  /* Hidden only when the inline script has run, so no-JavaScript visitors see everything */
+  html[data-intro] [data-reveal]:not([data-in]) {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  /* ---------- Accordion panel ---------- */
+  .panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--duration-base) var(--ease-brand);
+  }
+
+  .panel[data-open="true"] {
+    grid-template-rows: 1fr;
+  }
+
+  .panel > div {
+    overflow: hidden;
+  }
+
+  /* ---------- Full-screen dialog (menu and lightbox) ---------- */
+  dialog.sheet {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  dialog.sheet::backdrop {
+    background-color: rgb(0 0 0 / 0.8);
+  }
+
+  dialog.sheet[open] {
+    animation: sheet-in var(--duration-base) var(--ease-brand) both;
+  }
+
+  /* ---------- Loading ---------- */
+  .skeleton {
+    border-radius: var(--radius-sm);
+    background-image: linear-gradient(
+      90deg,
+      var(--color-ink-raised) 0%,
+      var(--color-line) 50%,
+      var(--color-ink-raised) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--radius-pill);
+    animation: spin 700ms linear infinite;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes intro-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
