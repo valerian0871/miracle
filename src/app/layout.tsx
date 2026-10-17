@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import Script from 'next/script'
 import { bodyFont, displayFont } from '@/lib/fonts'
 
 /*
@@ -11,10 +10,10 @@ const introFlag = `(function(){try{var r=window.matchMedia('(prefers-reduced-mot
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-GB" className={`${displayFont.variable} ${bodyFont.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: introFlag }} />
+      </head>
       <body>
-        <Script id="intro-flag" strategy="beforeInteractive">
-          {introFlag}
-        </Script>
         {children}
       </body>
     </html>

@@ -30,7 +30,6 @@ export function SanityImage({ image, sizes, priority = false, fill = false, clas
   const common = {
     loader: sanityLoader,
     src: image.src,
-    alt: image.alt,
     sizes,
     priority,
     placeholder: image.blur ? ('blur' as const) : ('empty' as const),
@@ -40,8 +39,8 @@ export function SanityImage({ image, sizes, priority = false, fill = false, clas
   }
 
   return fill ? (
-    <Image {...common} fill />
+    <Image {...common} alt={image.alt ?? ''} fill />
   ) : (
-    <Image {...common} width={image.width} height={image.height} />
+    <Image {...common} alt={image.alt ?? ''} width={image.width} height={image.height} />
   )
 }
