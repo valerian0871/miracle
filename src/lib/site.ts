@@ -13,10 +13,10 @@ export const NAV = [
  * before the content is seeded. It contains no invented claims.
  */
 export const DEFAULT_SETTINGS: SiteSettings = {
-  name: 'Portfolio',
+  name: 'Miracle Olu-Peters',
   role: 'Creative strategist and copywriter',
   location: '',
-  siteDescription: 'Portfolio of a creative strategist and copywriter.',
+  siteDescription: 'Portfolio of Miracle Olu-Peters, creative strategist and copywriter.',
   heroLines: [],
   intro: '',
   manifesto: [],

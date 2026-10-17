@@ -6,7 +6,7 @@ import { SubmitButton } from '@/components/ui/SubmitButton'
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
 const FIELD =
-  'w-full rounded-sm border border-line-strong bg-ink-raised px-2 text-body text-paper placeholder:text-paper-3 transition-colors duration-(--duration-base) ease-brand hover:border-paper-3 focus-visible:border-accent'
+  'w-full rounded-sm border border-line-strong bg-ink-raised px-2 text-body text-paper placeholder:text-paper-3 transition-colors duration-(--dur-quick) ease-out hover:border-paper-3 focus-visible:border-accent'
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>('idle')

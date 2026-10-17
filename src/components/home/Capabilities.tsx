@@ -1,63 +1,62 @@
-'use client'
-
-import { useId, useState } from 'react'
+import { Marquee } from '@/components/ui/Marquee'
 import type { Capability } from '@/sanity/types'
 
+/**
+ * One row per capability. Everything is visible at rest: number, title,
+ * summary and the item list. On a mouse or trackpad, the row under the pointer
+ * swaps its outline title for a running solid one and rolls its items, which
+ * marks where you are without hiding anything from touch or keyboard users.
+ */
 export function Capabilities({ items }: { items: Capability[] }) {
-  const [openKey, setOpenKey] = useState<string | null>(items[0]?._key ?? null)
-  const baseId = useId()
-
   return (
-    <ul className="divide-y divide-line border-y border-line">
+    <ul className="border-t border-line">
       {items.map((item, index) => {
-        const open = openKey === item._key
-        const buttonId = `${baseId}-button-${item._key}`
-        const panelId = `${baseId}-panel-${item._key}`
-
+        const list = item.items ?? []
         return (
-          <li key={item._key}>
-            <h3>
-              <button
-                id={buttonId}
-                type="button"
-                aria-expanded={open}
-                aria-controls={panelId}
-                onClick={() => setOpenKey(open ? null : item._key)}
-                className="flex w-full items-baseline justify-between gap-3 py-4 text-left"
-              >
-                <span className="flex items-baseline gap-3">
-                  <span className="w-4 shrink-0 font-body text-small font-normal tabular-nums text-accent">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span>{item.title}</span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  className={`inline-block text-lead text-paper-2 transition-transform duration-(--duration-base) ease-brand ${
-                    open ? 'rotate-45' : ''
-                  }`}
-                >
-                  +
-                </span>
-              </button>
-            </h3>
+          <li key={item._key} className="cap-row relative border-b border-line py-5 md:py-6">
+            <span aria-hidden="true" className="cap-rule absolute inset-x-0 bottom-[-1px] h-px bg-accent" />
+            <div className="cap-shift grid gap-3 md:grid-cols-12 md:items-start md:gap-6">
+              <span className="font-body text-small tabular-nums text-accent md:col-span-1 md:pt-3">
+                {String(index + 1).padStart(2, '0')}
+              </span>
 
-            <div id={panelId} role="region" aria-labelledby={buttonId} className="panel" data-open={open} inert={!open}>
-              <div>
-                <div className="grid gap-3 pb-6 md:grid-cols-12">
-                  <p className="text-lead text-paper-2 md:col-span-6 md:col-start-5">{item.summary}</p>
-                  {item.items?.length ? (
-                    <ul className="space-y-1 text-small text-paper-2 md:col-span-3 md:col-start-5">
-                      {item.items.map((entry) => (
-                        <li key={entry} className="border-t border-line pt-1">
-                          {entry}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
+              <div className="relative min-w-0 md:col-span-7">
+                <h3 className="text-[clamp(2.5rem,1.4rem+4.4vw,5.5rem)] leading-[0.95]">
+                  <span className="cap-ghost type-outline block text-paper">{item.title}</span>
+                </h3>
+                {/* Decorative running copy of the title; the heading above is the real one */}
+                <Marquee duration={22} className="cap-solid pointer-events-none absolute inset-0 hidden items-center md:flex">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <span key={i} className="pr-[0.4em] font-display text-[clamp(2.5rem,1.4rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.95]">
+                      {item.title}
+                      <span className="text-accent"> · </span>
+                    </span>
+                  ))}
+                </Marquee>
+              </div>
+
+              <div className="md:col-span-4 md:pt-2">
+                <p className="text-small text-paper-2">{item.summary}</p>
               </div>
             </div>
+
+            {list.length > 0 ? (
+              <div className="relative mt-3 md:ml-[calc(100%/12)]">
+                <ul className="cap-static flex flex-wrap gap-x-3 gap-y-1 text-small text-paper-3">
+                  {list.map((entry) => (
+                    <li key={entry}>{entry}</li>
+                  ))}
+                </ul>
+                <Marquee duration={28} reverse className="cap-items absolute inset-0 hidden items-center [@media(hover:hover)_and_(pointer:fine)]:md:flex">
+                  {[...list, ...list].map((entry, i) => (
+                    <span key={`${i}-${entry}`} className="label whitespace-nowrap pr-6 text-paper-2">
+                      {entry}
+                      <span className="pl-6 text-accent">·</span>
+                    </span>
+                  ))}
+                </Marquee>
+              </div>
+            ) : null}
           </li>
         )
       })}

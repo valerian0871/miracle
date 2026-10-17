@@ -11,6 +11,7 @@
   --radius-*: initial;
   --shadow-*: initial;
   --font-*: initial;
+  --ease-*: initial;
 
   /* Spacing: 1 unit = 8px */
   --spacing: 0.5rem;
@@ -26,6 +27,12 @@
   --color-accent: #d4a24a;
   --color-accent-ink: #15110a;
   --color-danger: #ee8a7d;
+
+  /* Work panel grounds. Each keeps paper text above 10:1. */
+  --color-tone-1: #10261f;
+  --color-tone-2: #2a1512;
+  --color-tone-3: #0f1d2e;
+  --color-tone-4: #1e1a10;
 
   /* Fonts: the --font-barlow and --font-source variables are set by next/font on <html> */
   --font-display: var(--font-barlow), "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
@@ -57,12 +64,18 @@
   --radius-md: 8px;
   --radius-pill: 999px;
 
-  /* Motion */
-  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-brand-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --duration-fast: 160ms;
-  --duration-base: 320ms;
-  --duration-slow: 700ms;
+  /*
+    Motion: one exponential family. Lenis decelerates the wheel on the same
+    expo-out curve, so scrolling and UI motion settle the same way.
+    GSAP equivalents: expo.out, expo.inOut, expo.in.
+  */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --dur-instant: 180ms;
+  --dur-quick: 350ms;
+  --dur-base: 600ms;
+  --dur-slow: 1050ms;
 }
 
 @layer base {
@@ -71,6 +84,29 @@
     color-scheme: dark;
     scroll-padding-top: 7rem;
     text-size-adjust: 100%;
+    /* Keeps the page from jumping sideways while the intro locks scrolling */
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--color-line-strong) var(--color-ink);
+  }
+
+  /* No scrolling while the intro covers the page */
+  html[data-intro="playing"],
+  html[data-intro="short"] {
+    overflow: hidden;
+  }
+
+  /* Lenis: the smooth-scroll library sets these classes on <html> */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: clip;
+  }
+
+  .lenis [data-lenis-prevent] {
+    overscroll-behavior: contain;
   }
 
   body {
@@ -123,6 +159,15 @@
     border-radius: var(--radius-sm);
   }
 
+  input,
+  textarea {
+    caret-color: var(--color-accent);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+  }
+
   button {
     cursor: pointer;
   }
@@ -145,7 +190,7 @@
     color: var(--color-accent-ink);
     font-weight: 600;
     transform: translateY(-200%);
-    transition: transform var(--duration-fast) var(--ease-brand);
+    transition: transform var(--dur-instant) var(--ease-out);
   }
 
   .skip-link:focus-visible {
@@ -158,7 +203,7 @@
     background-repeat: no-repeat;
     background-position: 0 100%;
     background-size: 0 1px;
-    transition: background-size var(--duration-base) var(--ease-brand);
+    transition: background-size var(--dur-quick) var(--ease-out);
   }
 
   .link-line:hover,
@@ -166,17 +211,32 @@
     background-size: 100% 1px;
   }
 
-  /* The only hover movement allowed: 2px up */
-  @media (hover: hover) {
+  /* The only hover movement allowed on cards: 2px up */
+  @media (hover: hover) and (pointer: fine) {
     .lift {
       transition:
-        transform var(--duration-base) var(--ease-brand),
-        border-color var(--duration-base) var(--ease-brand);
+        transform var(--dur-quick) var(--ease-out),
+        border-color var(--dur-quick) var(--ease-out);
     }
 
     .lift:hover {
       transform: translateY(-2px);
     }
+  }
+
+  /* Small uppercase label: metadata only, never above a heading */
+  .label {
+    font-size: var(--text-caption);
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* Outline display type, used for inactive titles and big numerals */
+  .type-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px currentColor;
+    paint-order: stroke fill;
   }
 
   /* Line mask for reveals. The padding and negative margin keep tone marks
@@ -192,88 +252,443 @@
     display: block;
   }
 
+  /* Film grain: one static SVG noise tile, no animation */
+  .grain {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  /* ---------- Marquee: two identical tracks, the second is aria-hidden ---------- */
+  .marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--marquee-duration, 30s) linear infinite;
+    animation-direction: var(--marquee-direction, normal);
+    animation-play-state: var(--marquee-state, running);
+  }
+
+  .marquee > * {
+    flex-shrink: 0;
+  }
+
+  /* Vertical ticker: same idea, rolls upwards */
+  .ticker {
+    display: flex;
+    flex-direction: column;
+    animation: ticker var(--ticker-duration, 18s) linear infinite;
+  }
+
   /* ---------- Intro screen ---------- */
   .intro {
     position: fixed;
     inset: 0;
     z-index: 90;
-    display: grid;
-    place-items: center;
+    display: none;
+    overflow: hidden;
     background-color: var(--color-ink);
-    visibility: hidden;
-    transform: translateY(-100%);
-    transition:
-      transform var(--duration-slow) var(--ease-brand-in-out),
-      visibility 0s linear var(--duration-slow);
   }
 
-  html[data-intro="playing"] .intro {
-    visibility: visible;
-    transform: none;
-    transition: none;
+  html[data-intro="playing"] .intro,
+  html[data-intro="short"] .intro,
+  html[data-intro="reveal"] .intro {
+    display: block;
     /* If JavaScript never finishes the intro, hide it anyway after 6 seconds */
     animation: intro-failsafe 0s linear 6s forwards;
   }
 
-  .intro-bar {
-    position: relative;
-    width: 100%;
-    height: 2px;
-    overflow: hidden;
-    background-color: var(--color-line);
+  .intro[data-stage="open"],
+  .intro[data-stage="gone"] {
+    background-color: transparent;
   }
 
-  .intro-bar::after {
-    content: "";
+  .intro-content {
     position: absolute;
     inset: 0;
-    background-color: var(--color-accent);
-    transform: scaleX(0);
-    transform-origin: left;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
   }
 
-  html[data-intro="playing"] .intro-bar::after {
-    animation: intro-bar 1400ms var(--ease-brand-in-out) forwards;
+  .intro[data-stage="open"] .intro-content,
+  .intro[data-stage="gone"] .intro-content {
+    visibility: hidden;
   }
 
-  /* ---------- Hero entrance (starts when the intro is done) ---------- */
-  html[data-intro="playing"] .rise {
-    transform: translateY(110%);
+  .intro-mark path {
+    fill: transparent;
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    vector-effect: non-scaling-stroke;
+    transition:
+      stroke-dashoffset 1200ms var(--ease-in-out),
+      fill var(--dur-base) var(--ease-out);
   }
 
+  .intro:not([data-stage="wait"]) .intro-mark path {
+    stroke-dashoffset: 0;
+  }
+
+  .intro[data-stage="line"] .intro-mark path,
+  .intro[data-stage="close"] .intro-mark path {
+    fill: var(--color-accent);
+  }
+
+  .intro-name,
+  .intro-line {
+    opacity: 0;
+    transform: translateX(3rem);
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  .intro-name {
+    transition-delay: 300ms;
+  }
+
+  .intro:not([data-stage="wait"]) .intro-name,
+  .intro[data-stage="line"] .intro-line,
+  .intro[data-stage="close"] .intro-line {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Two doors meet in the middle, hold, then part to show the hero */
+  .intro-door {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50.5%;
+    background-color: var(--color-paper);
+    transform: translateX(var(--door-from));
+  }
+
+  .intro-door[data-side="left"] {
+    left: 0;
+    --door-from: -100%;
+  }
+
+  .intro-door[data-side="right"] {
+    right: 0;
+    --door-from: 100%;
+  }
+
+  .intro[data-stage="close"] .intro-door,
+  .intro[data-stage="open"] .intro-door {
+    animation: door var(--door-ms, 1200ms) var(--ease-in-out) forwards;
+  }
+
+  .intro-skip {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-paper-2);
+    transition: color var(--dur-instant) var(--ease-out);
+  }
+
+  .intro-skip:hover {
+    color: var(--color-paper);
+  }
+
+  .intro[data-stage="open"] .intro-skip,
+  .intro[data-stage="gone"] .intro-skip {
+    visibility: hidden;
+  }
+
+  /* ---------- Hero entrance (starts as the doors part) ---------- */
+  html[data-intro="playing"] .rise,
+  html[data-intro="short"] .rise {
+    transform: translateY(112%);
+  }
+
+  html[data-intro="reveal"] .rise,
   html[data-intro="done"] .rise {
-    animation: rise var(--duration-slow) var(--ease-brand) both;
-    animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+    animation: rise var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
   }
 
-  html[data-intro="playing"] .fade-up {
+  html[data-intro="playing"] .fade-up,
+  html[data-intro="short"] .fade-up {
     opacity: 0;
   }
 
+  html[data-intro="reveal"] .fade-up,
   html[data-intro="done"] .fade-up {
-    animation: fade-up var(--duration-slow) var(--ease-brand) both;
-    animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+    animation: fade-up var(--dur-base) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 200ms);
   }
 
   /* ---------- Scroll reveal (below the fold only) ---------- */
   [data-reveal] {
     transition:
-      opacity var(--duration-slow) var(--ease-brand),
-      transform var(--duration-slow) var(--ease-brand);
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
     transition-delay: var(--delay, 0ms);
   }
 
   /* Hidden only when the inline script has run, so no-JavaScript visitors see everything */
   html[data-intro] [data-reveal]:not([data-in]) {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(24px);
   }
 
-  /* ---------- Accordion panel ---------- */
+  /* ---------- Header ---------- */
+  .site-header {
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out);
+  }
+
+  /* Full-screen scenes take the whole viewport */
+  html[data-chrome="hidden"] .site-header {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  /* On the home page the hero already shows the name; the wordmark arrives once it has gone */
+  .header-mark {
+    clip-path: inset(0);
+    transition: clip-path var(--dur-base) var(--ease-in-out);
+  }
+
+  html[data-hero="visible"] .header-mark {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .menu-button {
+    display: inline-flex;
+    height: 3rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding-inline: 1rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background-color: rgb(13 14 13 / 0.6);
+    backdrop-filter: blur(8px);
+    font-size: var(--text-small);
+    font-weight: 600;
+    transition: border-color var(--dur-instant) var(--ease-out);
+  }
+
+  .menu-button:hover {
+    border-color: var(--color-paper);
+  }
+
+  .menu-button:active {
+    transform: scale(0.97);
+  }
+
+  /* ---------- Menu: native <dialog>, opened as a circle from the button ---------- */
+  dialog.menu {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    clip-path: circle(0% at var(--menu-x, 100%) var(--menu-y, 0%));
+    transition: clip-path var(--dur-base) var(--ease-in-out);
+  }
+
+  dialog.menu::backdrop {
+    background: transparent;
+  }
+
+  dialog.menu[data-state="open"] {
+    clip-path: circle(150% at var(--menu-x, 100%) var(--menu-y, 0%));
+  }
+
+  .menu-col {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    overflow: hidden;
+    border-color: var(--color-line);
+    opacity: 0;
+    transform: translateY(2rem);
+    transition:
+      flex-grow var(--dur-base) var(--ease-in-out),
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+    transition-delay: 0ms, calc(var(--i) * 40ms + 150ms), calc(var(--i) * 40ms + 150ms);
+  }
+
+  dialog.menu[data-state="open"] .menu-col {
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu-col-media {
+    position: absolute;
+    inset: 0;
+    opacity: 0.25;
+    transition: opacity var(--dur-quick) var(--ease-out);
+  }
+
+  .menu-label-solid,
+  .menu-tagline,
+  .menu-arrow {
+    opacity: 0;
+    transition:
+      opacity var(--dur-quick) var(--ease-out),
+      transform var(--dur-quick) var(--ease-out);
+  }
+
+  .menu-arrow {
+    transform: translate(-0.5rem, 0.5rem);
+  }
+
+  .menu-tagline {
+    transform: translateY(0.5rem);
+  }
+
+  .menu-col:focus-within .menu-label-solid,
+  .menu-col:focus-within .menu-tagline,
+  .menu-col:focus-within .menu-arrow,
+  .menu-col:has([aria-current]) .menu-label-solid {
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu-col:focus-within .menu-col-media {
+    opacity: 0.55;
+  }
+
+  /* Touch screens have no hover to reveal with, so show everything */
+  @media not ((hover: hover) and (pointer: fine)) {
+    .menu-label-solid,
+    .menu-tagline,
+    .menu-arrow {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .menu-col:hover .menu-label-solid,
+    .menu-col:hover .menu-tagline,
+    .menu-col:hover .menu-arrow {
+      opacity: 1;
+      transform: none;
+    }
+
+    .menu-col:hover .menu-col-media {
+      opacity: 0.55;
+    }
+  }
+
+  /* Desktop: the column under the pointer or focus widens */
+  @media (min-width: 64rem) {
+    .menu-cols:has(.menu-col:focus-within) .menu-col:focus-within {
+      flex-grow: 2;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .menu-cols:hover .menu-col:hover {
+        flex-grow: 2;
+      }
+    }
+  }
+
+  .menu-bar {
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out) 250ms;
+  }
+
+  dialog.menu[data-state="open"] .menu-bar {
+    opacity: 1;
+  }
+
+  /* ---------- Page transition curtain ---------- */
+  .curtain {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    background-color: var(--color-ink-raised);
+    clip-path: inset(0 0 100% 0);
+  }
+
+  .curtain[data-state="cover"] {
+    pointer-events: auto;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 540ms var(--ease-in-out);
+  }
+
+  .curtain[data-state="reveal"] {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 520ms var(--ease-in-out);
+  }
+
+  /* ---------- Capabilities rows ---------- */
+  .cap-row .cap-solid,
+  .cap-row .cap-items {
+    opacity: 0;
+    transition: opacity var(--dur-quick) var(--ease-out);
+    --marquee-state: paused;
+  }
+
+  .cap-row .cap-ghost,
+  .cap-row .cap-static {
+    transition: opacity var(--dur-quick) var(--ease-out);
+  }
+
+  .cap-row .cap-rule {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .cap-row .cap-shift {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 48rem) {
+    .cap-row:hover .cap-solid,
+    .cap-row:hover .cap-items {
+      opacity: 1;
+      --marquee-state: running;
+    }
+
+    .cap-row:hover .cap-ghost,
+    .cap-row:hover .cap-static {
+      opacity: 0;
+    }
+
+    .cap-row:hover .cap-rule {
+      transform: scaleX(1);
+    }
+
+    .cap-row:hover .cap-shift {
+      transform: translateX(1rem);
+    }
+  }
+
+  /* ---------- Accordion panel (case-study pages) ---------- */
   .panel {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows var(--duration-base) var(--ease-brand);
+    transition: grid-template-rows var(--dur-quick) var(--ease-out);
   }
 
   .panel[data-open="true"] {
@@ -284,7 +699,7 @@
     overflow: hidden;
   }
 
-  /* ---------- Full-screen dialog (menu and lightbox) ---------- */
+  /* ---------- Full-screen dialog (lightbox) ---------- */
   dialog.sheet {
     position: fixed;
     inset: 0;
@@ -304,7 +719,7 @@
   }
 
   dialog.sheet[open] {
-    animation: sheet-in var(--duration-base) var(--ease-brand) both;
+    animation: sheet-in var(--dur-quick) var(--ease-out) both;
   }
 
   /* ---------- Loading ---------- */
@@ -329,7 +744,7 @@
     animation: spin 700ms linear infinite;
   }
 
-    /* ---------- Buttons: one shape, two variants ---------- */
+  /* ---------- Buttons: one shape, two variants ---------- */
   .btn {
     display: inline-flex;
     height: 3rem;
@@ -344,19 +759,17 @@
     font-weight: 600;
     white-space: nowrap;
     transition:
-      transform var(--duration-base) var(--ease-brand),
-      background-color var(--duration-base) var(--ease-brand),
-      border-color var(--duration-base) var(--ease-brand);
+      transform var(--dur-instant) var(--ease-out),
+      background-color var(--dur-instant) var(--ease-out),
+      border-color var(--dur-instant) var(--ease-out);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
   }
 
   .btn:disabled {
     opacity: 0.6;
-  }
-
-  @media (hover: hover) {
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
   }
 
   .btn-primary {
@@ -376,11 +789,64 @@
   .btn-secondary:hover:not(:disabled) {
     border-color: var(--color-paper);
   }
+
+  /* Text link with a circled arrow, the site's secondary action */
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: var(--text-small);
+    font-weight: 600;
+  }
+
+  .arrow-link-circle {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    transition: border-color var(--dur-instant) var(--ease-out);
+  }
+
+  .arrow-link-circle svg {
+    transition: transform var(--dur-quick) var(--ease-out);
+  }
+
+  .arrow-link:hover .arrow-link-circle {
+    border-color: var(--color-paper);
+  }
+
+  .arrow-link:hover .arrow-link-circle svg {
+    transform: translateX(3px);
+  }
+
+  /* Footer mark draws itself once when it comes into view */
+  .footer-mark path {
+    stroke-width: 1.5;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    vector-effect: non-scaling-stroke;
+    transition: stroke-dashoffset var(--dur-slow) var(--ease-in-out);
+  }
+
+  .footer-mark[data-in] path {
+    stroke-dashoffset: 0;
+  }
+
+  .arrow-link:hover .arrow-link-circle svg.no-nudge {
+    transform: none;
+  }
+
+  /* Scroll cue: a dot travels down a short line */
+  .scroll-cue-dot {
+    animation: cue-dot 2.2s var(--ease-in-out) infinite;
+  }
 }
 
 @keyframes rise {
   from {
-    transform: translateY(110%);
+    transform: translateY(112%);
   }
   to {
     transform: none;
@@ -398,9 +864,44 @@
   }
 }
 
-@keyframes intro-bar {
+@keyframes door {
+  0% {
+    transform: translateX(var(--door-from));
+  }
+  48%,
+  52% {
+    transform: none;
+  }
+  100% {
+    transform: translateX(var(--door-from));
+  }
+}
+
+@keyframes marquee {
   to {
-    transform: scaleX(1);
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes ticker {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes cue-dot {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  10%,
+  70% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: translateY(2.5rem);
   }
 }
 
@@ -444,5 +945,22 @@
     transition-duration: 0.001ms !important;
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Loops stop on their first frame instead of jumping to the last */
+  .marquee,
+  .ticker,
+  .scroll-cue-dot {
+    animation: none !important;
+  }
+
+  /* The menu still needs to be visible without the circle */
+  dialog.menu {
+    clip-path: none;
+    opacity: 0;
+  }
+
+  dialog.menu[data-state="open"] {
+    opacity: 1;
   }
 }

@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { DEFAULT_SETTINGS } from '@/lib/site'
+import { DEMO_SETTINGS, demoEnabled } from './demo'
 import { sanityFetch } from './lib/fetch'
 import { PROJECT_QUERY, PROJECTS_QUERY, SETTINGS_QUERY } from './queries'
 import type { Project, ProjectSummary, SiteSettings } from './types'
@@ -9,7 +10,7 @@ function isLive(project: { publishAfter?: string | null }, now: Date): boolean {
 }
 
 function normaliseSettings(raw: Record<string, unknown> | null): SiteSettings {
-  const merged: Record<string, unknown> = { ...DEFAULT_SETTINGS }
+  const merged: Record<string, unknown> = { ...DEFAULT_SETTINGS, ...(demoEnabled() ? DEMO_SETTINGS : {}) }
   if (raw) {
     for (const [key, value] of Object.entries(raw)) {
       if (value !== null && value !== undefined) merged[key] = value
